@@ -1,0 +1,484 @@
+<apex:page sidebar="false" controller="VFC01_GMP_GenerateMergePackageController" action="{!init}" docType="html-5.0">
+
+    <style>
+            
+        .HomeButtons {
+            background-color:#0e83cd;           
+            border-radius:13px;
+            border:4px solid #fff;
+            display:inline-block;
+            cursor:pointer;
+            color:#fff;
+            font-family: Lucida Console, serif;
+            font-size:30px;
+            font-weight:bold;
+            margin-top:50px;
+            margin-bottom:50px;
+            margin-left:180px;
+            text-decoration:none;            
+            height:100px;
+            width:300px;
+            text-align:center;
+            -webkit-transition: all 0.8s;
+            -moz-transition: all 0.8s;
+            transition: all 0.8s;
+                       
+        }
+        
+        .HomeButtons:hover {
+            background-color:#fff;
+            border:6px solid #fff;
+            -ms-transform: rotate(360deg); /* IE 9 */
+            -webkit-transform: rotate(360deg); /* Chrome, Safari, Opera */
+            transform: rotate(360deg); /* Standard syntax */
+            height:200px;
+            width:500px;
+            font-size:50px; 
+            color:#0e83cd;
+        }
+       
+        .leftsection {
+            width:530px;
+            float:left;
+            border-style:solid;
+            border-color:#e3e3e3;
+            height:375px;
+        }
+        
+        .rightsection {
+            width:530px;
+            float:left;
+            border-style:solid;
+            border-color:#e3e3e3;
+            height:375px;
+        }
+        
+        .middlesection {
+            float:left;
+            margin-top:100px;
+            padding-left:20px;
+            padding-right:20px;
+
+        }       
+        
+        .topsection {
+            align:center;           
+            padding-top:20px;
+        }
+        
+        .buttonsection {
+            align:center;
+            clear:both;
+        }
+        
+        .bottomsection {
+            clear:both;
+            margin:20px;
+        }
+        
+        .tiltlestyle{
+            font-size: 20px;
+            height: 25px;
+            padding-left: 10px;
+            padding-top: 3px;
+            padding-bottom:5px;
+            font-family:Arial;
+            font-weight:bold;
+            background-color:#0e83cd;
+            color:#fff;
+        }
+
+        .overlay {
+            display: none;
+            height: 100%;
+            left: 0;
+            position: fixed;
+            top: 0;
+            opacity: 0.3;
+            -moz-opacity: 0.3;
+            width: 100%;
+            -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
+            filter: alpha(opacity=30);
+            background: #000;
+            -khtml-opacity: 0.3;
+            z-index: 1000;
+        }
+        
+        .loader {
+            background: url('/img/loading32.gif') scroll no-repeat 0 0;
+            width: 32px;
+            height: 32px;
+            position: absolute;
+            left: 50%;
+        }        
+    </style>
+    
+    <apex:actionStatus onstart="startLoading();" onstop="endLoading();" id="actionStatus"/>
+    <div id="load_scrl" class="loadingBox loader" style="display:none"> </div>
+    <div class="loadingBox overlay">  </div>    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script type="text/javascript">
+        
+        j$ = jQuery.noConflict();
+        
+        function startLoading(){
+            j$('#load_scrl').css('top', j$(document).scrollTop() + 200);
+            j$('.loadingBox').show();
+
+        }
+        
+        function endLoading(){
+            j$('.loadingBox').hide();
+        }    
+        
+        j$(document).ready(function() {
+          
+          j$("#formGP").hide();
+          j$("#formMP").hide();
+          
+          j$("#gp").click(function() {
+              
+              j$("#formGP").fadeIn("slow");              
+              j$("#formMP").hide();
+          });
+          
+          j$("#mp").click(function() {
+              
+              j$("#formMP").fadeIn("slow");              
+              j$("#formGP").hide();
+          });
+          var tm = "{!showMP}"          
+          if(tm=='true') {
+          
+              j$("#formMP").show();
+          }
+      });
+      
+      
+    </script>
+    
+    <script type = "text/javascript">
+        function checkAll(cb){
+            var inputElem = document.getElementsByTagName("input");
+            for(var i=0; i<inputElem.length; i++){
+                inputElem[i].checked = cb.checked;
+            }
+        }
+        function check(obj) {
+            var path = obj.value;
+            var ext = path.substring(path.lastIndexOf('.') + 1);
+
+            if(ext !="xml")
+            {
+                obj.value = null;
+                window.alert("Please select file having .xml extension");
+                return false;
+            }
+        } 
+    </script>
+    
+    <div id="formHome">
+    <apex:form >
+
+        <div style="background-color:#0e83cd;">
+        <div class="HomeButtons" id="gp">
+            Generate Package.xml        
+        </div>
+
+        <div class="HomeButtons" id="mp">       
+           Merge Package.xml(s)
+        </div>
+        </div>
+        
+    </apex:form>
+    </div>
+    
+    <div id="formGP">
+    <apex:form >
+
+        <apex:pageblock id="pgb1">
+            <apex:pagemessages id="errmessage1" />
+
+            <apex:pageblocksection id="pgbs1" columns="3">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >
+                        <apex:outputLabel value="Component Type" style="font-family:Arial;font-weight:bold;font-size:15px;color:#585858;background-color:#FFFFFF;"/> 
+                        <apex:selectList size="1" value="{!MetadataType}" style="font-family:Arial;font-weight:bold;font-size:13px;padding:4px 1px;margin-left:5px;">
+                        <apex:selectOptions value="{!MetadataTypes}"/>
+                        <apex:actionSupport event="onchange"  action="{!FindAllComponents}" rerender="pgb1" status="actionStatus"/> 
+                        </apex:selectList>
+                    </apex:outputPanel>   
+                </apex:pageBlockSectionItem>                
+                
+                <apex:pageBlockSectionItem rendered="{!IsFolderDisplayed}">
+                    <apex:outputpanel >
+                    <apex:selectList size="1" value="{!selectedFolder}" style="font-family:Arial;font-weight:bold;font-size:13px;padding:4px 1px;margin-left:5px;">
+                    <apex:selectOptions value="{!folderList}"/>
+                    </apex:selectList>&nbsp;&nbsp; 
+                    <apex:commandbutton value="Search" action="{!SearchFolderComponents}" rerender="pgb1" status="actionStatus" style="border-radius:15px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px"/>
+                    </apex:outputpanel>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!IsCustomObjectsDisplayed}">
+                    <apex:outputpanel >
+                    <apex:selectList size="1" value="{!selectedObject}" style="font-family:Arial;font-weight:bold;font-size:13px;padding:4px 1px;margin-left:5px;">
+                    <apex:selectOptions value="{!ObjectList}"/>
+                    </apex:selectList>&nbsp;&nbsp; 
+                    <apex:commandbutton value="Search" action="{!SearchCustomFields}" rerender="pgb1" status="actionStatus" style="border-radius:15px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px"/>
+                    </apex:outputpanel>
+                </apex:pageBlockSectionItem>
+
+            </apex:pageblocksection>                        
+            <br/><br/>
+            <apex:pageblocksection id="pgbs3" columns="1">
+                <apex:pageblocksectionitem >
+                    <apex:outputpanel >
+                    <apex:outputlabel for="searchtext" value="Enter keyword to search" style="font-family:Arial;font-weight:bold;font-size:14px;color:#989898;background-color:#FFFFFF;"/> 
+                    <apex:inputtext value="{!strSearchtext}" id="searchtext" style="height:20px;font-family:arial;font-size:14px;margin-left:5px"/>
+                    <apex:commandbutton value="Search" action="{!SearchComponents}" rerender="pgb1" status="actionStatus" style="border-radius:15px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px;margin-left:10px"/>
+                    </apex:outputpanel>
+                </apex:pageblocksectionitem>
+            </apex:pageblocksection>
+            
+            <apex:pageBlockSection columns="1">
+                
+                <apex:pageBlockSectionItem >                    
+                    <apex:outputPanel >
+                        <apex:outputLabel value="Filter by Last Modified Date" style="font-family:Arial;font-weight:bold;font-size:14px;color:#989898;background-color:#FFFFFF;"/>
+                        <apex:outputLabel value="Modified after" style="font-family:arial;font-size:12px;font-weight:bold;margin-left:20px;">
+                        <apex:input type="date" title="From Date" value="{!fromDate}" style="margin-left:5px;"/>
+                        </apex:outputLabel>
+                        <apex:outputLabel value="Modified before" style="font-family:arial;font-size:12px;font-weight:bold;margin-left:15px">
+                        <apex:input type="date" title="To Date" value="{!toDate}" style="margin-left:5px;"/>
+                        </apex:outputLabel>
+                        <apex:commandbutton value="Filter" action="{!LMFilter}" rerender="pgb1" status="actionStatus" style="border-radius:15px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px;margin-left:10px"/>
+                    </apex:outputPanel>                    
+                </apex:pageBlockSectionItem>
+                
+            </apex:pageBlockSection>
+
+            <apex:pageblocksection id="pgbs2" columns="1">
+                <!--left section-->
+                <apex:pageBlockSectionItem >
+
+                    <apex:outputpanel id="resultpanel">
+                        <div class="resultsection">
+                            <!-- left section starts -->
+                            <div class="leftsection">
+                            <apex:pageblocksection columns="1">
+                                <apex:outputpanel >
+                                    <div align="center" class="tiltlestyle" > List of components</div>
+                                    <div id="compsec" style="overflow-y:scroll;overflow-x:scroll;height:300px;width:500px;" >
+                                        <apex:outputpanel rendered="{!listToDisplauOnUI.size==0}">
+                                            <div align="center">
+                                                <apex:outputtext value="No components to display." style="font-weight:bold;"/> 
+                                            </div>
+                                        </apex:outputpanel>
+                                        <apex:outputpanel rendered="{!listToDisplauOnUI.size>0}" id="comppanel">
+                                            <table>
+                                            <tr>
+                                                <th></th>
+                                                <th>Name</th>                                             
+                                            </tr>
+                                            <apex:repeat var="comp" value="{!listToDisplauOnUI}">
+                                                <tr>
+                                                    <td><apex:inputcheckbox value="{!comp.isSelected}"/></td>
+                                                    <td>
+                                                        <apex:outputpanel rendered="{!if(comp.strComponentNameId<>'' && comp.strComponentNameId<>null,true,false)}">
+                                                            <apex:outputlink value="/{!comp.strComponentNameId}" >{!comp.strComponentName}</apex:outputlink>
+                                                        </apex:outputpanel>
+                                                        <apex:outputpanel rendered="{!if(comp.strComponentNameId=='' || comp.strComponentNameId==null,true,false)}">
+                                                            <apex:outputtext value="{!comp.strComponentName}" />
+                                                        </apex:outputpanel>
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat>
+                                            </table>
+                                        </apex:outputpanel>
+                                    </div>
+                                </apex:outputpanel>
+                            </apex:pageblocksection>
+                            <!-- pagination links starts-->
+                            <div>
+                                <apex:panelGrid columns="7" rendered="{!listToDisplauOnUI.size>0}">
+                                    <apex:outputlabel for="nor" value="No.of records per page"/>
+                                    <apex:selectlist value="{!pagesize}" size="1">
+                                        <apex:selectOption itemValue="25" itemLabel="25"/>
+                                        <apex:selectOption itemValue="50" itemLabel="50"/>
+                                        <apex:selectOption itemValue="100" itemLabel="100"/>
+                                        <apex:actionSupport event="onchange"  action="{!ResetAllComponents}" rerender="pgb1" status="actionStatus"/>
+                                    </apex:selectlist>
+
+                                    <apex:commandButton status="actionStatus" value="First" action="{!showFirst}"  disabled="{!!showPrevious}" title="First Page" rerender="pgb1" />
+                                    <apex:commandButton status="actionStatus" value="Previous" action="{!showPrevious}"  disabled="{!!showPrevious}" title="Previous Page" rerender="pgb1" />
+                                    <apex:commandButton status="actionStatus" value="Next" action="{!showNext}"  disabled="{!!showNext}"  title="Next Page" rerender="pgb1" />
+                                    <apex:commandButton status="actionStatus" value="Last" action="{!showLast}"   disabled="{!!showNext}" title="Last Page" rerender="pgb1"/>
+                                    <apex:outputtext value="{!currentPageInfo}"/>
+
+                                </apex:panelGrid>
+                            </div>
+                            <!-- pagination links ends-->
+                            </div>
+                            <!-- left section ends -->
+                            <!-- middle section starts -->
+                            <div class="middlesection"> 
+                                <apex:commandbutton value=">>" title="Add" action="{!AddComponents}" rerender="pgb1" status="actionStatus" style="border-radius:5px;border:2px solid #A8A8A8;font-weight:bold;font-size:20px"/>  <br/><br/><br/><br/><br/><br/><br/><br/>
+                                <apex:commandbutton value="<<" title="Remove" action="{!RemoveComponent}" rerender="pgb1" status="actionStatus" style="border-radius:5px;border:2px solid #A8A8A8;font-weight:bold;font-size:20px"/>
+                            </div>
+                            <!-- middle section ends -->
+                            <!-- right section starts -->
+                            <div class="rightsection">
+                                <apex:pageblocksection columns="1">
+                                    <apex:outputpanel >
+                                        <div align="center" class="tiltlestyle"> Selected Components</div>
+                                        <div id="comprightsec" style="overflow-y:scroll;overflow-x:scroll;height:300px;width:500px;" >
+                                        <apex:outputpanel rendered="{!selectedComponentlist.size>0}">
+                                            <table>
+                                                <tr>
+                                                <th></th>
+                                                <th>Name</th>  
+                                                <th>Type</th>
+                                                </tr>
+                                                <apex:repeat var="comp" value="{!selectedComponentlist}">
+                                                <tr>
+                                                <td><apex:inputcheckbox value="{!comp.isSelected}"/></td>
+                                                <td><apex:outputlink value="/{!comp.strComponentNameId}">{!comp.strComponentName}</apex:outputlink></td>
+                                                <td><apex:outputtext value="{!comp.strMetaDataType}"/></td>
+                                                </tr>
+                                                </apex:repeat>
+                                            </table>
+                                        </apex:outputpanel> 
+                                        </div>
+                                    </apex:outputpanel>
+                                </apex:pageblocksection> 
+                            </div>
+                            <!-- right section ends -->
+                        </div> 
+                    </apex:outputpanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageblocksection>
+            <apex:pageblocksection rendered="{!selectedComponentlist.size>0}" columns="1">
+                <apex:pageblocksectionitem >
+                    <apex:outputpanel >
+                        <div style="margin-top:30px;">
+                            <apex:outputlabel value="Version" for="vrsn" style="font-family:Arial;font-weight:bold;font-size:15px;color:#585858;background-color:#FFFFFF;"/>
+                            <apex:selectlist value="{!strSelectedVersion}" size="1" id="vrsn" style="font-family:Arial;font-weight:bold;font-size:13px;padding:4px 1px;margin-left:5px;">
+                                <apex:selectoptions value="{!VersionList}"/>
+                            </apex:selectlist>
+                            <apex:commandbutton value="Generate package.xml" action="{!GeneratepackageXml}" rerender="pgb1" status="actionStatus" style="border-radius:8px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px;margin-left:20px;"/>
+                        </div>
+                        <div>
+                            <apex:inputtextarea value="{!strPackageXml}" style="width:600px;height:314px;margin-top:30px;" rendered="{!isPackageXmlDisplayed}"/>
+                        </div>
+                        <div style="margin-top:30px;">
+                            <table>
+                                <tr>
+                                    <td colspan="2">
+                                        <apex:outputpanel rendered="{!isPackageXmlDisplayed}">
+                                            <apex:outputlabel value="File name" for="flname" style="font-family:Arial;font-weight:bold;font-size:15px;color:#585858;background-color:#FFFFFF;"/>
+                                            <apex:inputtext value="{!UserDefinedFilename}" style="height:20px;font-family:arial;font-size:14px;margin-left:5px;"/>
+                                            <apex:commandbutton value="Upload package.xml in Documents(XML_Package_Documents folder)" action="{!UploadPackagexml}" rerender="pgb1" status="actionStatus" rendered="{!isPackageXmlDisplayed}" style="border-radius:8px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px;margin-left:20px;"/>
+                                        </apex:outputpanel>
+                                    </td>
+                                </tr>
+                            </table>                           
+                            <div style="margin-top:30px;"> 
+                                <apex:outputLink target="_top" value="/servlet/servlet.FileDownload?file={!MergedPackageFileid}" rendered="{!if(strMergedPackageFilename<>'' && strMergedPackageFilename<>null,true,false)}" style="font-family:arial;font-size:14px;">Download File</apex:outputLink>
+                                <apex:outputLink target="_top" value="/{!MergedPackageFileid}" rendered="{!if(strMergedPackageFilename<>'' && strMergedPackageFilename<>null,true,false)}" style="font-family:arial;font-size:14px;margin-left:30px;">{!strMergedPackageFilename}</apex:outputLink> 
+                            </div> 
+                        </div>                           
+                    </apex:outputpanel>
+                </apex:pageblocksectionitem>
+            </apex:pageblocksection>
+        </apex:pageblock>
+    </apex:form>
+    </div>
+    
+    <div id="formMP">
+    <apex:form >
+        <apex:pageMessages />
+        <apex:pageblock >
+            <apex:pageblocksection columns="2">
+                <apex:pageblocksectionitem >
+                    <apex:outputpanel > 
+                        <div class="tiltlestyle" align="center"> Files upload section</div>
+                        <div align="center" style="margin-top:20px">
+                            <apex:panelGrid columns="4">
+                                <apex:commandButton value="Reset" title="Remove all selected files" action="{!ResetAttachmentList}" status="actionStatus" style="border-radius:15px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px"/>
+                                <apex:commandButton value="Upload" title="Upload all the selected files for merging" action="{!upload}" status="actionStatus" style="border-radius:12px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px"/>
+                                <apex:commandButton value="Add More Files" title="Add More Files" action="{!addMoreFiles}" status="actionStatus" style="border-radius:10px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px"/>
+                            </apex:panelGrid>
+                        </div>
+                        <div id="compsec" style="overflow-y:scroll;height:300px;"  align="center">
+                            <apex:outputpanel >
+                                <br/>
+                                <apex:pageBlockSection columns="1" id="thePageBlockSection" >
+                                    <apex:repeat value="{!newDocList}" var="newAtt" id="theRepeatAttachment">
+                                        <apex:pageBlockSectionItem id="pbsi1">
+                                            <apex:outputLabel value="File" style="font-family:arial;font-size:14px;"/>
+                                            <apex:inputFile value="{!newAtt.body}" filename="{!newAtt.name}" onchange="check(this)" id="filePath"/>
+                                        </apex:pageBlockSectionItem>
+                                    </apex:repeat>
+                                </apex:pageBlockSection>
+                            </apex:outputpanel>
+                        </div>
+                    </apex:outputpanel>
+                </apex:pageblocksectionitem>
+                <apex:pageblocksectionitem >
+                    <apex:outputpanel >
+                        <div class="tiltlestyle" align="center">Uploaded Files</div>
+                        <div align="center" style="margin-top:20px">
+                            <apex:panelGrid columns="3" style="align:center;">
+                                <apex:commandButton value="Delete Selected" action="{!DeleteSelectedFiles}" status="actionStatus" style="border-radius:15px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px"/>
+                                <apex:commandButton value="Merge Selected"  action="{!MergeFiles}" status="actionStatus" style="border-radius:10px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px"/> 
+                                <apex:commandButton value="Show All Docs From Folder"  action="{!showAllDocs}" status="actionStatus" style="border-radius:5px;border:2px solid #A8A8A8;font-family:arial;font-weight:bold;padding:8px 10px" />                                 
+                            </apex:panelGrid>
+                            <div style="margin-top:10px;margin-left:210px">
+                                <apex:pageblocksection columns="1">                            
+                                    <apex:pageblocksectionitem >
+                                        <apex:outputlabel value="Version" for="vrsn" style="font-family:Arial;font-weight:bold;font-size:15px;color:#585858;background-color:#FFFFFF;"/>
+                                        <apex:selectlist value="{!strSelectedVersion}" size="1" id="vrsn" style="font-family:Arial;font-weight:bold;font-size:11px;padding:1px 1px;">
+                                            <apex:selectoptions value="{!VersionList}"/>
+                                        </apex:selectlist>
+                                    </apex:pageblocksectionitem>
+                                </apex:pageblocksection>
+                            </div>
+                        </div>
+                        <div id="compsec" style="overflow-y:scroll;height:300px;"  align="center">
+                            <apex:outputpanel rendered="{!showAllFiles}">
+
+                                <apex:pageblocksection columns="1">
+                                    <apex:pageBlockTable value="{!doclistUI}" var="d" id="table">
+                                        <apex:column >
+                                            <apex:facet name="header">
+                                                <apex:inputCheckbox id="selectAllCheckBox" onclick="checkAll(this)"/>
+                                            </apex:facet>
+                                            <apex:inputCheckbox value="{!d.selected}"/>
+                                        </apex:column>
+                                        <apex:column headervalue="Name" style="font-family:arial;font-size:14px;">
+                                            <apex:outputlink value="/{!d.doc.id}" >{!d.doc.name}</apex:outputlink>
+                                        </apex:column>
+                                    </apex:pageBlockTable>
+                                </apex:pageblocksection>
+                            </apex:outputpanel>
+                        </div>
+                    </apex:outputpanel>
+                </apex:pageblocksectionitem>
+            </apex:pageblocksection>
+        </apex:pageblock>
+        <!-- -section to display the uploaded files -->
+        <apex:outputPanel id="FinalDocListPanel" rendered="{!if(strMergedPackageFilename<>'' && strMergedPackageFilename<>null,true,false)}"> 
+            <apex:pageBlock title="Merged File" >
+                <apex:pageBlockSection columns="3">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLink target="_top" value="/servlet/servlet.FileDownload?file={!MergedPackageFileid}" style="font-family:arial;font-size:14px;">Download File</apex:outputLink>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLink target="_top" value="/{!MergedPackageFileid}" style="font-family:arial;font-size:14px;">{!strMergedPackageFilename}</apex:outputLink>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+    </div>
+</apex:page>

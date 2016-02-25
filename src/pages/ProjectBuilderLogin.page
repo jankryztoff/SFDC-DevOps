@@ -1,0 +1,16 @@
+<apex:page controller="ProjectBuilderLoginController" showHeader="true" sidebar="false">
+<apex:pageBlock title="Environment">
+<apex:pageBlockSection >
+<apex:form >
+   <apex:outputLabel value="Please Select the Environment" style="font-weight: bold; font-size: 120%;"></apex:outputLabel>
+  <apex:selectList value="{!strDomain}" multiselect="false" size="1" style="margin-left:23%;margin-top:5%;">
+            <apex:selectOptions value="{!DomainDetail}"/> 
+            <!--<apex:actionsupport event="onchange" action="{!validateLoginDetail}"/>-->
+           
+        </apex:selectList>
+
+ <apex:commandButton value="Login With Salesforce" action="{!validateLoginDetail}"/>
+</apex:form>
+</apex:pageBlockSection>
+</apex:pageBlock>
+</apex:page>
